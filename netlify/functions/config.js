@@ -13,23 +13,13 @@
  *   SUPABASE_ANON_KEY
  */
 exports.handler = async () => {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Supabase env vars not configured in Netlify.' })
-    };
-  }
-
   return {
     statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store'            // never cache credentials
-    },
-    body: JSON.stringify({ url, key })
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    body: JSON.stringify({
+      url: process.env.SUPABASE_URL,
+      key: process.env.SUPABASE_ANON_KEY
+    })
   };
+};
 };
