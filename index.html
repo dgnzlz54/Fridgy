@@ -980,7 +980,7 @@ function go(s) {
   if(nm[s]!==undefined) ni[nm[s]].classList.add('active');
   S.screen=s; render(s);
 }
-function render(s) { ({home:renderHome,cook:renderCook,pantry:()=>renderPantry(),plan:renderPlan,profiles:renderProfiles,shop:renderShop}[s]||_=>{})(); }
+function render(s) { ({home:renderHome,cook:renderCook,pantry:()=>renderPantry(),plan:renderPlan,profiles:renderProfiles,shop:renderShop}[s]||function(){})(); }
 function renderAll() { renderHome();renderCook();renderPantry();renderPlan();renderProfiles();renderShop(); }
 
 /* ── MODALS ── */
