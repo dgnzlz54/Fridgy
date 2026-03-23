@@ -2,70 +2,839 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1A2840">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Fridgy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="Fridgy — Your Dinner Decision Engine">
+<meta name="theme-color" content="#2B3D5A">
+<title>Fridgy — Your Dinner Decision Engine</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='8' y='6' width='16' height='22' rx='3' fill='%232B3D5A'/><rect x='8' y='6' width='4' height='22' rx='2' fill='%234A8F84'/><line x1='12' y1='17' x2='24' y2='17' stroke='%23EDE5CC' stroke-width='1.5'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-
-
-:root
-  --cream:#EDE5CC;--cream2:#F5EED8;--paper:#E4D9BE;
-  --navy:#2B3D5A;--navy-dk:#1A2840;--navy-lt:#3D5478;
-  --teal:#4A8F84;--teal-lt:#6BADA2;--teal-dk:#2E6B62;
-  --gold:#B8922A;--gold-lt:#D4AE50;
-  --sepia:#7A5C35;--sepia-lt:#A07848;--rule:#D4C4A0;
-  --ink:#1E1812;--red:#B83030;--green:#2E7840;
+:root {
+  --cream:#EDE5CC; --cream2:#F5EED8; --paper:#E4D9BE;
+  --navy:#2B3D5A; --navy-dk:#1A2840; --navy-lt:#3D5478;
+  --teal:#4A8F84; --teal-lt:#6BADA2; --teal-dk:#2E6B62;
+  --gold:#B8922A; --gold-lt:#D4AE50;
+  --sepia:#7A5C35; --sepia-lt:#A07848; --rule:#D4C4A0;
+  --ink:#1E1812; --red:#B83030; --green:#2E7840;
 }
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{height:100%;}
-body{font-family:'Lora',serif;background:var(--navy-dk);color:var(--ink);height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;}
-.app-wrap{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--cream2);max-width:430px;margin:0 auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
-.header{background:var(--navy-dk);border-bottom:2.5px solid var(--teal);flex-shrink:0;display:flex;align-items:stretch;min-height:52px;}
-.logo-zone{padding:8px 14px;border-right:1px solid var(--navy-lt);display:flex;align-items:center;flex:1;}
-.h-logo{height:28px;width:auto;max-width:130px;object-fit:contain;display:block;}
-.hactions{display:flex;}
-.hbtn{background:none;border:none;color:var(--cream);padding:0 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;border-left:1px solid var(--navy-lt);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;opacity:.7;min-width:46px;}
-.hbtn:active{opacity:1;background:var(--navy-lt);}
-.hbtn svg{width:14px;height:14px;}
-.scroll-body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:8px;}
-.bnav{background:var(--navy-dk);border-top:2.5px solid var(--teal);display:flex;flex-shrink:0;}
-.nv{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 10px;cursor:pointer;color:var(--cream);opacity:.35;border-right:1px solid var(--navy-lt);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;min-height:52px;justify-content:center;transition:opacity .15s;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lora',serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:8999;background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 55%,rgba(30,24,18,.08) 100%);}
+
+/* APP */
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--cream2);border-left:1px solid var(--rule);border-right:1px solid var(--rule);}
+.screen{display:none;padding-bottom:90px;}
+.screen.active{display:block;animation:pgIn .25s ease both;}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* LOADING */
+.load-screen{position:fixed;inset:0;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s ease;}
+.load-screen.out{opacity:0;pointer-events:none;}
+.load-screen.gone{display:none;}
+.load-video{width:220px;height:220px;object-fit:contain;flex-shrink:0;}
+.load-logo{width:190px;height:auto;object-fit:contain;margin-top:-4px;flex-shrink:0;mix-blend-mode:multiply;}
+.load-tagline{font-family:'DM Mono',monospace;font-size:.47rem;letter-spacing:.26em;text-transform:uppercase;color:var(--sepia);margin-top:7px;}
+.load-bar-wrap{width:120px;height:3px;background:var(--paper);border-radius:2px;margin-top:20px;overflow:hidden;}
+.load-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:2px;animation:ldbar 2.4s ease-in-out forwards;}
+@keyframes ldbar{from{width:0}to{width:100%}}
+
+/* AUTH */
+#auth-screen{min-height:100vh;background:var(--cream);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;position:relative;overflow:hidden;}
+#auth-screen.active{display:flex;}
+#auth-screen::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(74,143,132,.09) 1px,transparent 1px);background-size:26px 26px;pointer-events:none;}
+.auth-mascot{width:150px;height:auto;max-height:178px;object-fit:contain;filter:drop-shadow(0 8px 28px rgba(30,24,18,.2));position:relative;z-index:1;flex-shrink:0;mix-blend-mode:multiply;}
+.auth-logo{width:210px;height:auto;object-fit:contain;margin:4px 0 3px;position:relative;z-index:1;flex-shrink:0;mix-blend-mode:multiply;}
+.auth-tagline{font-family:'DM Mono',monospace;font-size:.45rem;letter-spacing:.24em;text-transform:uppercase;color:var(--sepia);margin-bottom:22px;position:relative;z-index:1;}
+.auth-card{background:var(--cream2);border:1.5px solid var(--rule);width:100%;max-width:360px;padding:22px 20px;border-radius:4px;box-shadow:0 4px 32px rgba(30,24,18,.1);position:relative;z-index:1;}
+.auth-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:16px;text-align:center;}
+.atabs{display:flex;margin-bottom:18px;border:1.5px solid var(--rule);border-radius:3px;overflow:hidden;}
+.atab{flex:1;padding:8px;text-align:center;font-family:'DM Mono',monospace;font-size:.45rem;letter-spacing:.13em;text-transform:uppercase;cursor:pointer;color:var(--sepia);border-right:1.5px solid var(--rule);transition:all .15s;}
+.atab:last-child{border-right:none;}
+.atab.on{background:var(--navy);color:var(--cream);}
+.aerr{font-family:'DM Mono',monospace;font-size:.42rem;letter-spacing:.09em;text-transform:uppercase;color:var(--red);margin-bottom:7px;text-align:center;min-height:14px;}
+.ig{margin-bottom:10px;}
+.lbl{font-family:'DM Mono',monospace;font-size:.41rem;letter-spacing:.13em;text-transform:uppercase;color:var(--sepia);display:block;margin-bottom:3px;}
+.inp{width:100%;padding:9px 10px;border:1.5px solid var(--rule);border-radius:3px;font-family:'Lora',serif;font-size:.9rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--teal);}
+.sel{width:100%;padding:9px 10px;border:1.5px solid var(--rule);border-radius:3px;font-family:'Lora',serif;font-size:.9rem;background:var(--cream);color:var(--ink);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath d='M5 6L1 2h8z' fill='%237A5C35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.abtn{width:100%;padding:11px;background:var(--navy);color:var(--cream);border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:.49rem;letter-spacing:.17em;text-transform:uppercase;border-radius:3px;transition:all .15s;margin-top:4px;}
+.abtn:hover{background:var(--navy-dk);}
+.abtn:disabled{opacity:.5;cursor:not-allowed;}
+.abtn.ghost{background:transparent;color:var(--sepia);border:1.5px solid var(--rule);}
+.abtn.ghost:hover{background:var(--paper);}
+.adiv{text-align:center;font-family:'DM Mono',monospace;font-size:.41rem;letter-spacing:.11em;text-transform:uppercase;color:var(--sepia);margin:12px 0;display:flex;align-items:center;gap:9px;}
+.adiv::before,.adiv::after{content:'';flex:1;height:1px;background:var(--rule);}
+
+/* HEADER */
+.header{background:var(--navy-dk);position:sticky;top:0;z-index:500;border-bottom:3px solid var(--teal);}
+.header-inner{display:flex;align-items:stretch;}
+.logo-zone{padding:8px 14px;border-right:1px solid var(--navy-lt);display:flex;align-items:center;}
+.h-logo{height:32px;width:auto;max-width:150px;object-fit:contain;display:block;flex-shrink:0;mix-blend-mode:multiply;}
+.hactions{display:flex;margin-left:auto;}
+.hbtn{background:none;border:none;color:var(--cream);padding:0 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:.39rem;letter-spacing:.12em;text-transform:uppercase;border-left:1px solid var(--navy-lt);transition:background .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;opacity:.7;}
+.hbtn:hover{background:var(--navy-lt);opacity:1;}
+.hbtn svg{width:12px;height:12px;}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--navy-dk);border-top:3px solid var(--teal);display:flex;z-index:500;}
+.nv{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px 9px;cursor:pointer;color:var(--cream);opacity:.35;transition:all .18s;border-right:1px solid var(--navy-lt);font-family:'DM Mono',monospace;font-size:.37rem;letter-spacing:.11em;text-transform:uppercase;}
 .nv:last-child{border-right:none;}
 .nv.active{opacity:1;color:var(--gold-lt);}
-.nv svg{width:18px;height:18px;}
-.screen{display:none;}
-.screen.active{display:block;}
-.page-banner{background:var(--navy);padding:16px 16px 13px;border-bottom:2.5px solid var(--teal);}
-.page-title{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,5vw,1.7rem);font-weight:700;color:var(--cream);line-height:1.1;}
+.nv svg{width:15px;height:15px;}
+
+/* PAGE STRUCTURE */
+.page-banner{background:var(--navy);padding:14px 16px 12px;border-bottom:3px solid var(--teal);}
+.page-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--cream);line-height:1.1;}
 .page-title em{color:var(--gold-lt);font-style:italic;font-weight:400;}
-.page-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:rgba(237,229,204,.5);margin-top:3px;}
+.page-sub{font-family:'DM Mono',monospace;font-size:.41rem;letter-spacing:.17em;text-transform:uppercase;color:rgba(237,229,204,.5);margin-top:3px;}
 .teal-stripe{background:var(--teal);height:3px;border-bottom:1.5px solid var(--teal-dk);}
-.sec{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:var(--sepia);padding:0 16px;margin:14px 0 7px;display:flex;align-items:center;gap:8px;}
+.sec{font-family:'DM Mono',monospace;font-size:.45rem;letter-spacing:.19em;text-transform:uppercase;color:var(--sepia);padding:0 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;}
 .sec::after{content:'';flex:1;height:1px;background:var(--rule);}
-.card{background:var(--cream2);border:1.5px solid var(--rule);margin:0 14px 8px;border-radius:4px;}
-.stats{display:flex;margin:0 14px 10px;border:1.5px solid var(--rule);border-radius:4px;overflow:hidden;}
-.stat{flex:1;padding:10px;border-right:1.5px solid var(--rule);text-align:center;}
+
+/* CARDS */
+.card{background:var(--cream2);border:1.5px solid var(--rule);margin:0 14px 8px;border-radius:3px;}
+.stats{display:flex;margin:0 14px 10px;border:1.5px solid var(--rule);border-radius:3px;overflow:hidden;}
+.stat{flex:1;padding:9px 10px;border-right:1.5px solid var(--rule);text-align:center;}
 .stat:last-child{border-right:none;}
-.snum{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--navy);}
-.slbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--sepia);margin-top:2px;}
-.home-hero{background:var(--paper);padding:16px;border-bottom:1.5px solid var(--rule);display:flex;align-items:center;gap:12px;}
+.snum{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+.slbl{font-family:'DM Mono',monospace;font-size:.38rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sepia);margin-top:2px;}
+
+/* HOME HERO */
+.home-hero{background:var(--paper);padding:16px 16px 14px;border-bottom:1.5px solid var(--rule);display:flex;align-items:center;gap:12px;}
 .hero-txt{flex:1;min-width:0;}
-.hero-title{font-family:'Playfair Display',serif;font-size:clamp(1.1rem,4.5vw,1.35rem);font-weight:700;color:var(--navy);line-height:1.2;}
+.hero-title{font-family:'Playfair Display',serif;font-size:1.28rem;font-weight:700;color:var(--navy);line-height:1.15;}
 .hero-title em{color:var(--teal-dk);font-style:italic;font-weight:400;}
 .hero-rule{width:28px;height:2px;background:var(--teal);margin:7px 0;}
-.hero-sub{font-family:'Lora',serif;font-style:italic;font-size:14px;color:var(--sepia);}
-.hero-mascot{width:90px;height:auto;max-height:110px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 14px rgba(30,24,18,.12));animation:mascotFloat 3s ease-in-out infinite;}
-@keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.macro-rings{display:flex;gap:8px;padding:0 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:2px;}
-.macro-rings::-webkit-scrollbar{display:none;}
-.mring-card{background:var(--cream2);border:1.5px solid var(--rule);border-radius:4px;padding:10px 12px;flex-shrink:0;display:flex;align-items:center;gap:10px;min-width:150px;}
-.mring-name{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--sepia);}
-.mring-cal{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--navy);margin-top:2px;}
-.mring-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--sepia-lt);}
-.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 2px;}
+.hero-sub{font-family:'Lora',serif;font-style:italic;font-size:.82rem;color:var(--sepia);}
+.hero-mascot{width:110px;height:auto;max-height:130px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 14px rgba(30,24,18,.12));animation:mascotFloat 3s ease-in-out infinite;mix-blend-mode:multiply;}
+@keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* QA GRID */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px 2px;}
+.qa{background:var(--cream2);border:1.5px solid var(--rule);padding:13px 12px;cursor:pointer;transition:all .15s;border-radius:3px;}
+.qa:hover{background:var(--navy);border-color:var(--navy-dk);}
+.qa:hover .qa-lbl,.qa:hover .qa-desc{color:var(--cream);}
+.qa:hover .qa-desc{opacity:.65;}
+.qa:hover svg{color:var(--gold-lt);}
+.qa svg{width:16px;height:16px;display:block;margin-bottom:7px;color:var(--sepia);}
+.qa-lbl{font-family:'DM Mono',monospace;font-size:.45rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);}
+.qa-desc{font-family:'Lora',serif;font-size:.78rem;color:var(--sepia);margin-top:2px;}
+
+/* EXPIRY */
+.exprow{display:flex;gap:6px;padding:0 14px;flex-wrap:wrap;margin-bottom:6px;}
+.exit{border:1.5px solid var(--rule);padding:6px 9px;border-radius:3px;background:var(--cream2);}
+.exname{font-family:'Lora',serif;font-size:.79rem;font-weight:600;color:var(--ink);}
+.exd{font-family:'DM Mono',monospace;font-size:.36rem;letter-spacing:.08em;text-transform:uppercase;margin-top:3px;display:block;}
+.eok{color:var(--green);}.esoon{color:var(--gold);}.edanger{color:var(--red);}
+.eok2{background:#e8f5eb;color:var(--green);}.esoon2{background:#fef7e0;color:#7a5c00;}.edanger2{background:#faeaea;color:var(--red);}
+
+/* HH ROWS */
+.hhrow{display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--rule);}
+.hhrow:last-child{border-bottom:none;}
+.hhav{width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.66rem;font-weight:700;flex-shrink:0;}
+.hhname{font-family:'Lora',serif;font-size:.86rem;font-weight:600;color:var(--ink);flex:1;}
+.hhcal{font-family:'DM Mono',monospace;font-size:.37rem;letter-spacing:.08em;color:var(--sepia);text-transform:uppercase;}
+.goalb{font-family:'DM Mono',monospace;font-size:.34rem;letter-spacing:.07em;text-transform:uppercase;padding:2px 5px;border:1.5px solid;border-radius:2px;}
+.goalb.cut{color:var(--red);border-color:var(--red);}
+.goalb.maintain{color:var(--green);border-color:var(--green);}
+.goalb.lean_bulk,.goalb.bulk{color:var(--gold);border-color:var(--gold);}
+
+/* PERSON CHIPS */
+.prow{display:flex;gap:6px;padding:0 14px;flex-wrap:wrap;}
+.pchip{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:7px 9px;border:1.5px solid var(--rule);border-radius:3px;transition:all .15s;background:var(--cream2);min-width:62px;}
+.pchip.on{background:var(--teal);border-color:var(--teal-dk);}
+.pchip.on .pcn,.pchip.on .pcc{color:var(--cream);}
+.pchip.on .pcav{background:var(--teal-dk);}
+.pcav{width:30px;height:30px;border-radius:50%;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.7rem;font-weight:700;}
+.pcn{font-family:'DM Mono',monospace;font-size:.4rem;letter-spacing:.09em;text-transform:uppercase;color:var(--sepia);}
+.pcc{font-family:'DM Mono',monospace;font-size:.36rem;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-dk);min-width:52px;}
+
+/* SETTINGS / PROFILES */
+.profcard{margin:0 14px 9px;border:1.5px solid var(--rule);border-radius:3px;overflow:hidden;}
+.profhdr{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--rule);}
+.profav{width:36px;height:36px;border-radius:50%;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.84rem;font-weight:700;flex-shrink:0;}
+.profname{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:var(--navy);}
+.profsub{font-family:'DM Mono',monospace;font-size:.38rem;letter-spacing:.09em;text-transform:uppercase;color:var(--sepia);margin-top:2px;}
+.psrow{display:flex;border-bottom:1px solid var(--rule);}
+.ps{flex:1;padding:8px 8px;border-right:1px solid var(--rule);text-align:center;}
+.ps:last-child{border-right:none;}
+.psv{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;color:var(--navy);}
+.psl{font-family:'DM Mono',monospace;font-size:.35rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sepia);margin-top:1px;}
+.mbsec{padding:9px 13px 3px;}
+.mbrow{margin-bottom:6px;}
+.mblbl{font-family:'DM Mono',monospace;font-size:.36rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sepia);display:flex;justify-content:space-between;margin-bottom:2px;}
+.mbar{height:5px;background:var(--paper);border-radius:3px;overflow:hidden;}
+.mbf{height:100%;border-radius:3px;transition:width .5s;}
+.mbp{background:var(--red);}.mbc{background:var(--teal);}.mbfat{background:var(--gold);}
+.mcals{display:flex;border-top:1px solid var(--rule);}
+.mc{flex:1;padding:6px 5px;border-right:1px solid var(--rule);text-align:center;}
+.mc:last-child{border-right:none;}
+.mcv{font-family:'Playfair Display',serif;font-size:.78rem;font-weight:700;color:var(--navy);}
+.mcl{font-family:'DM Mono',monospace;font-size:.32rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sepia);margin-top:1px;}
+.rtag{display:inline-block;font-family:'DM Mono',monospace;font-size:.36rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;margin:2px;border-radius:2px;}
+.rtag.a{background:#faeaea;color:var(--red);}.rtag.d{background:var(--paper);color:var(--sepia);}
+.rtagw{padding:5px 13px 9px;}
+
+/* SHOPPING */
+.shitem{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--rule);}
+.shitem:last-child{border-bottom:none;}
+.shchk{width:18px;height:18px;border:2px solid var(--rule);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;border-radius:2px;}
+.shchk.on{background:var(--teal);border-color:var(--teal-dk);}
+.shchk.on::after{content:'';display:block;width:8px;height:5px;border-left:2px solid var(--cream);border-bottom:2px solid var(--cream);transform:rotate(-45deg) translateY(-1px);}
+.shname{font-family:'Lora',serif;font-size:.84rem;color:var(--ink);}
+.shamt{font-family:'DM Mono',monospace;font-size:.38rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sepia);margin-top:2px;}
+.crossed{text-decoration:line-through;opacity:.35;}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(30,24,18,.7);z-index:800;justify-content:center;align-items:flex-end;}
+.overlay.active{display:flex;}
+.modal{background:var(--cream2);border-top:4px solid var(--teal);width:100%;max-width:430px;max-height:90vh;overflow-y:auto;}
+.mdrag{width:32px;height:3px;background:var(--rule);border-radius:2px;margin:11px auto 0;}
+.mhead{padding:13px 16px 10px;border-bottom:1.5px solid var(--rule);text-align:center;}
+.mtitle{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--navy);}
+.mmeta{font-family:'DM Mono',monospace;font-size:.4rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sepia);margin-top:3px;}
+.msec{font-family:'DM Mono',monospace;font-size:.42rem;letter-spacing:.15em;text-transform:uppercase;color:var(--teal-dk);padding:10px 16px 3px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:8px;}
+.msec::after{content:'';flex:1;height:1px;background:var(--rule);}
+.portcard{margin:0 16px 7px;border:1.5px solid var(--rule);border-radius:3px;overflow:hidden;}
+.porthdr{display:flex;align-items:center;gap:8px;padding:7px 11px;border-bottom:1px solid var(--rule);}
+.portav{width:24px;height:24px;border-radius:50%;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.6rem;font-weight:700;}
+.porting{list-style:none;padding:0 11px;}
+.porting li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--rule);font-family:'Lora',serif;font-size:.8rem;}
+.porting li:last-child{border-bottom:none;}
+.portmacros{display:flex;border-top:1px solid var(--rule);}
+.pm{flex:1;padding:5px;text-align:center;border-right:1px solid var(--rule);}
+.pm:last-child{border-right:none;}
+.pmv{font-family:'Playfair Display',serif;font-size:.8rem;font-weight:700;color:var(--navy);}
+.pml{font-family:'DM Mono',monospace;font-size:.31rem;letter-spacing:.07em;text-transform:uppercase;color:var(--sepia);}
+.tling{padding:0 16px;}
+.tl{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--rule);font-family:'Lora',serif;font-size:.8rem;}
+.tl:last-child{border-bottom:none;}
+.steprow{display:flex;gap:9px;padding:5px 16px;align-items:flex-start;}
+.stepn{width:18px;height:18px;border:1.5px solid var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.39rem;flex-shrink:0;margin-top:2px;color:var(--teal-dk);}
+.steptxt{font-family:'Lora',serif;font-size:.8rem;line-height:1.55;color:var(--ink);}
+.mbtns{padding:12px 16px 24px;display:flex;flex-direction:column;gap:6px;}
+.mpri{padding:10px;background:var(--teal);color:var(--cream);border:1.5px solid var(--teal-dk);cursor:pointer;font-family:'DM Mono',monospace;font-size:.46rem;letter-spacing:.14em;text-transform:uppercase;width:100%;border-radius:3px;transition:opacity .15s;}
+.mpri:hover{opacity:.85;}
+.msec2{padding:8px;background:transparent;color:var(--sepia);border:1.5px solid var(--rule);cursor:pointer;font-family:'DM Mono',monospace;font-size:.42rem;letter-spacing:.11em;text-transform:uppercase;width:100%;border-radius:3px;transition:all .15s;}
+.msec2:hover{border-color:var(--navy);color:var(--navy);}
+
+/* MISC */
+.addbtn{display:block;text-align:center;padding:9px;margin:0 14px 7px;border:1.5px dashed var(--rule);background:transparent;cursor:pointer;font-family:'DM Mono',monospace;font-size:.44rem;letter-spacing:.13em;text-transform:uppercase;color:var(--sepia);transition:all .15s;width:calc(100% - 28px);border-radius:3px;}
+.addbtn:hover{border-color:var(--navy);border-style:solid;color:var(--navy);}
+.empty{text-align:center;padding:26px 16px;}
+.emptyt{font-family:'Lora',serif;font-style:italic;font-size:.87rem;color:var(--sepia);}
+.emptys{font-family:'DM Mono',monospace;font-size:.38rem;letter-spacing:.12em;text-transform:uppercase;color:var(--rule);margin-top:4px;}
+.toast{position:fixed;bottom:94px;left:50%;transform:translateX(-50%);background:var(--teal);color:var(--cream);font-family:'DM Mono',monospace;font-size:.42rem;letter-spacing:.11em;text-transform:uppercase;padding:8px 15px;border-radius:3px;border:1.5px solid var(--teal-dk);z-index:2000;opacity:0;transition:opacity .22s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.hdiv{height:1px;background:var(--rule);margin:10px 16px;}
+.brow{display:flex;gap:6px;margin-top:10px;}
+.mh{padding:0 16px;font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:12px;}
+
+/* MACRO RINGS */
+.macro-ring{width:100px;height:100px;border-radius:50%;background:conic-gradient(var(--teal) 0deg calc(var(--cal-deg) * 1deg), var(--teal-lt) calc(var(--cal-deg) * 1deg) 360deg);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+.macro-ring::before{content:'';position:absolute;inset:8px;border-radius:50%;background:var(--cream2);}
+.macro-ring-inner{position:relative;z-index:1;text-align:center;}
+.macro-ring-cal{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--navy);}
+.macro-ring-lbl{font-family:'DM Mono',monospace;font-size:.32rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sepia);margin-top:1px;}
+.macro-ring-row{display:flex;gap:12px;align-items:center;padding:12px;background:var(--cream2);border:1.5px solid var(--rule);border-radius:3px;margin:0 14px 8px;}
+.macro-ring-row.home{flex-direction:column;align-items:center;}
+.macro-breakdown{display:flex;gap:8px;font-size:.7rem;margin-top:6px;}
+.macro-item{display:flex;align-items:center;gap:3px;}
+.macro-dot{width:8px;height:8px;border-radius:50%;}
+.macro-dot.p{background:var(--red);}
+.macro-dot.c{background:var(--gold);}
+.macro-dot.f{background:var(--teal);}
+
+/* MOBILE RESPONSIVE */
+@media (max-width:480px){
+  .app{max-width:100%;border:none;}
+  .home-hero{padding:12px 12px 10px;gap:8px;flex-direction:column;align-items:flex-start;}
+  .hero-title{font-size:1.05rem;}
+  .hero-mascot{width:90px;max-height:110px;}
+  .qa-grid{grid-template-columns:1fr;gap:6px;padding:0 12px 2px;}
+  .qa{padding:11px 10px;}
+  .qa-lbl{font-size:.42rem;}
+  .qa-desc{font-size:.75rem;}
+  .cook-banner{padding:12px 12px 10px;gap:10px;}
+  .cook-mascot{width:56px;max-height:68px;}
+  .cook-title{font-size:.95rem;}
+  .hero-title em{display:inline;}
+  .page-title{font-size:1.25rem;}
+  .page-sub{font-size:.38rem;}
+  .snum{font-size:1.1rem;}
+  .stats{margin:0 12px 8px;}
+  .card{margin:0 12px 8px;}
+  .sec{padding:0 12px;margin:12px 0 5px;font-size:.42rem;}
+  .exprow{padding:0 12px;margin-bottom:4px;}
+  .exit{padding:5px 8px;}
+  .exname{font-size:.76rem;}
+  .exd{font-size:.34rem;}
+  .prow{padding:0 12px;gap:5px;}
+  .pchip{padding:6px 8px;min-width:56px;}
+  .pcav{width:26px;height:26px;font-size:.65rem;}
+  .pcn{font-size:.37rem;}
+  .pcc{font-size:.34rem;}
+  .mtabs{margin:0 12px;}
+  .mtab{font-size:.38rem;padding:6px 3px;}
+  .trow{padding:8px 12px;}
+  .tlbl{font-size:.8rem;}
+  .chat-feed{padding:8px 12px;gap:6px;}
+  .bubble{max-width:90%;font-size:.8rem;padding:8px 10px;}
+  .bfrom{font-size:.36rem;}
+  .chat-bar{padding:7px 12px;bottom:76px;}
+  .cinp{font-size:.8rem;padding:7px 9px;}
+  .sbtn{padding:7px 11px;font-size:.4rem;}
+  .qs-row{padding:2px 12px 6px;gap:4px;}
+  .qsb{padding:3px 6px;font-size:.38rem;}
+  .rcard{margin:0 12px 6px;}
+  .rcard-h{padding:9px 11px;}
+  .rcard-m{font-size:.72rem;}
+  .rcard-w{font-size:.76rem;}
+  .rcard-b{padding:0 11px 9px;font-size:.75rem;}
+  .rbdg{font-size:.36rem;padding:2px 4px;}
+  .ptag{font-size:.72rem;padding:2px 4px;}
+  .modal{max-width:90vw;}
+  .addbtn{margin:0 12px 6px;width:calc(100% - 24px);font-size:.42rem;}
+  .mbtns{padding:10px 12px 20px;gap:5px;}
+  .mpri{padding:9px;font-size:.44rem;}
+  .msec2{padding:7px;font-size:.4rem;}
+  .profcard{margin:0 12px 8px;}
+  .profhdr{padding:10px;}
+  .profname{font-size:.9rem;}
+  .profsub{font-size:.36rem;}
+  .ps{padding:8px;}
+  .psv{font-size:1rem;}
+  .psl{font-size:.34rem;}
+  .mbrow{padding:6px 0;}
+  .mblbl{font-size:.36rem;}
+  .mbar{height:6px;}
+  .mc{padding:6px;}
+  .mcv{font-size:.95rem;}
+  .mcl{font-size:.34rem;}
+  .rtagw{padding:8px 10px 0;}
+  .rtag{font-size:.36rem;padding:2px 6px;}
+  .pi{padding:9px;}
+  .pi-name{font-size:.8rem;}
+  .pi-qty{font-size:.72rem;}
+  .ebadge{font-size:.34rem;}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;padding:0 12px;}
+  .dayrow{padding:0 12px;margin-bottom:8px;}
+  .dayhdr{padding:8px 0;font-size:.9rem;}
+  .dmrow{padding:6px 0;font-size:.78rem;}
+  .dmlbl{font-size:.36rem;}
+  .shitem{padding:8px 10px;}
+  .shchk{width:18px;height:18px;}
+  .shname{font-size:.8rem;}
+  .shamt{font-size:.72rem;}
+  .scanner{height:80px;}
+  .scan-lbl{font-size:.38rem;}
+  .tabs{gap:4px;margin:0 12px;}
+  .tab{font-size:.38rem;padding:6px 8px;}
+  .bnav{max-width:100%;}
+  .nv{font-size:.34rem;padding:6px 2px 8px;gap:2px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="load-screen" id="loadScreen">
+  <img src="assets/mascot.png" class="load-video" alt="Mascot">
+  <img src="assets/logo.png" class="load-logo" alt="Fridgy">
+  <div class="load-tagline">Dinner Decision Engine</div>
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+</div>
+
+<div id="auth-screen">
+  <img src="assets/mascot.png" class="auth-mascot" alt="Mascot">
+  <img src="assets/logo.png" class="auth-logo" alt="Fridgy">
+  <div class="auth-tagline">Household Food Intelligence</div>
+  <div class="auth-card">
+    <div class="atabs"><div class="atab on" id="tab-login" onclick="switchTab('login')">Sign In</div><div class="atab" id="tab-signup" onclick="switchTab('signup')">Create Account</div></div>
+    <div class="aerr" id="aerr"></div>
+    <div id="lform">
+      <div class="ig"><label class="lbl">Email</label><input type="email" class="inp" id="l-email" placeholder="you@example.com"></div>
+      <div class="ig"><label class="lbl">Password</label><input type="password" class="inp" id="l-pass" placeholder="••••••••"></div>
+      <button class="abtn" id="l-btn" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="sform" style="display:none;">
+      <div class="ig"><label class="lbl">Kitchen Name</label><input type="text" class="inp" id="s-name" placeholder="The Smith Kitchen"></div>
+      <div class="ig"><label class="lbl">Email</label><input type="email" class="inp" id="s-email" placeholder="you@example.com"></div>
+      <div class="ig"><label class="lbl">Password</label><input type="password" class="inp" id="l-pass-s" placeholder="6+ characters"></div>
+      <button class="abtn" id="s-btn" onclick="doSignup()">Create Account</button>
+    </div>
+    <div class="adiv">OR</div>
+    <button class="abtn ghost" onclick="demo()">Try Demo Mode</button>
+  </div>
+</div>
+
+<div id="app-content" style="display:none;">
+  <div class="header">
+    <div class="logo-zone"><img src="assets/logo.png" class="h-logo" alt="Fridgy"></div>
+    <div class="hactions">
+      <button class="hbtn" onclick="openModal('addItemModal')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v14M2 9h14"/></svg>Add</button>
+      <button class="hbtn" onclick="doLogout()"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l4 4-4 4M16 6H6a4 4 0 00-4 4v6"/></svg>Exit</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="home-hero">
+      <div class="hero-txt">
+        <div class="hero-title" id="greeting">Good morning, <em>Chef</em></div>
+        <div class="hero-rule"></div>
+        <div class="hero-sub">What's on the menu today?</div>
+      </div>
+      <img src="assets/mascot.png" class="hero-mascot" alt="Mascot">
+    </div>
+    <div class="sec">Daily Progress</div>
+    <div id="homeRings"></div>
+    <div class="sec">Quick Actions</div>
+    <div class="qa-grid">
+      <div class="qa" onclick="go('cook')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9Q3 3 9 3Q15 3 15 9"/><rect x="1" y="9" width="16" height="3" rx="1"/></svg><div class="qa-lbl">Decide Dinner</div><div class="qa-desc">AI meal suggestions</div></div>
+      <div class="qa" onclick="simScan()"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h14M2 9h14M2 14h14M5 2v14M13 2v14"/></svg><div class="qa-lbl">Scan Items</div><div class="qa-desc">Add via barcode</div></div>
+    </div>
+    <div class="sec">Expiring Soon</div>
+    <div class="exprow" id="homeExp"></div>
+  </div>
+
+  <!-- COOK -->
+  <div class="screen" id="s-cook">
+    <div class="page-banner"><div class="page-title">Dinner <em>Decision</em></div><div class="page-sub">AI-powered recipe engine</div></div>
+    <div class="teal-stripe"></div>
+    <div class="sec">Who's Dining?</div>
+    <div class="prow" id="cookDiners"></div>
+    <div class="sec">Meal Settings</div>
+    <div class="mtabs"><div class="mtab on" onclick="setMT('breakfast',this)">Breakfast</div><div class="mtab" onclick="setMT('lunch',this)">Lunch</div><div class="mtab on" onclick="setMT('dinner',this)">Dinner</div></div>
+    <div class="trow"><div class="tlbl">Plan for Leftovers?</div><div class="shchk" id="lo-chk" onclick="togLO()"></div></div>
+    <div id="lo-diners" style="display:none;"><div class="sec">For Whom?</div><div class="prow" id="loDiners"></div></div>
+    <div class="chat-feed" id="chatFeed">
+      <div class="bubble ai"><div class="bfrom">Fridgy Assistant</div>Welcome! Select who's eating and I'll find the perfect recipes from your pantry.</div>
+    </div>
+    <div id="recipeResults"></div>
+    <div class="chat-bar">
+      <input type="text" class="cinp" id="chatInp" placeholder="Ask anything... e.g. Something spicy?">
+      <button class="sbtn" onclick="sendChat()">Send</button>
+    </div>
+    <div class="qs-row"><div class="qsb" onclick="sendChat('What can I make with my expiring items?')">Expiring items?</div><div class="qsb" onclick="sendChat('High protein dinner ideas')">High protein?</div><div class="qsb" onclick="sendChat('Quick 15-min meals')">Quick meals</div></div>
+  </div>
+
+  <!-- PANTRY -->
+  <div class="screen" id="s-pantry">
+    <div class="page-banner"><div class="page-title">The <em>Pantry</em></div><div class="page-sub">Your current food inventory</div></div>
+    <div class="teal-stripe"></div>
+    <div style="height:10px;"></div>
+    <div class="scanner" onclick="simScan()"><div class="sfrm"><div class="sline"></div></div><div class="scan-lbl">Tap to Scan Barcode</div></div>
+    <div style="display:flex;gap:7px;padding:0 14px 9px;">
+      <button class="addbtn" style="margin:0;flex:1;" onclick="openModal('addItemModal')">+ Manual Add</button>
+      <button class="addbtn" style="margin:0;flex:1;" onclick="simScan()">+ Scan Item</button>
+    </div>
+    <div class="tabs"><div class="tab on" onclick="filterPantry('all',this)">All</div><div class="tab" onclick="filterPantry('fridge',this)">Fridge</div><div class="tab" onclick="filterPantry('freezer',this)">Freezer</div><div class="tab" onclick="filterPantry('pantry',this)">Pantry</div></div>
+    <div class="pgrid" id="pantryGrid"></div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="screen" id="s-plan">
+    <div class="page-banner"><div class="page-title">Weekly <em>Plan</em></div><div class="page-sub">Your week of meals, mapped out</div></div>
+    <div class="teal-stripe"></div>
+    <div style="height:8px;"></div>
+    <div id="weeklyPlan"></div>
+  </div>
+
+  <!-- PROFILES / CREW -->
+  <div class="screen" id="s-profiles">
+    <div class="page-banner"><div class="page-title">The <em>Household</em></div><div class="page-sub">Goals, macros & restrictions</div></div>
+    <div class="teal-stripe"></div>
+    <div style="height:8px;"></div>
+    <div id="profileCards"></div>
+    <button class="addbtn" onclick="openModal('addProfModal')">+ Add Housemate</button>
+  </div>
+
+  <!-- SHOPPING -->
+  <div class="screen" id="s-shop">
+    <div class="page-banner"><div class="page-title">Shopping <em>List</em></div><div class="page-sub">What you need to grab</div></div>
+    <div class="teal-stripe"></div>
+    <div style="height:10px;"></div>
+    <div class="stats" style="margin-bottom:10px;">
+      <div class="stat"><div class="snum" id="shopCount">0</div><div class="slbl">To Get</div></div>
+      <div class="stat"><div class="snum" id="shopDone">0</div><div class="slbl">Got It</div></div>
+    </div>
+    <div id="shopList"></div>
+    <div style="display:flex;gap:7px;padding:0 14px;">
+      <button class="addbtn" style="margin:0;flex:1;" onclick="openModal('addShopModal')">+ Add Item</button>
+      <button class="addbtn" style="margin:0;flex:1;" onclick="clearChecked()">Clear Checked</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav">
+    <div class="nv active" onclick="go('home')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9L9 2l7 7"/><path d="M4 7.5V16h4v-5h2v5h4V7.5"/></svg>Home</div>
+    <div class="nv" onclick="go('cook')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9Q3 3 9 3Q15 3 15 9"/><rect x="1" y="9" width="16" height="3" rx="1"/><line x1="7" y1="12" x2="7" y2="16"/><line x1="11" y1="12" x2="11" y2="16"/><line x1="4" y1="16" x2="14" y2="16"/></svg>Cook</div>
+    <div class="nv" onclick="go('pantry')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="10" height="14" rx="1"/><line x1="6.5" y1="7" x2="11.5" y2="7"/><line x1="6.5" y1="10" x2="11.5" y2="10"/></svg>Pantry</div>
+    <div class="nv" onclick="go('plan')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="14" height="12" rx="1"/><line x1="6" y1="2" x2="6" y2="6"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="2" y1="8" x2="16" y2="8"/></svg>Plan</div>
+    <div class="nv" onclick="go('profiles')"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="6" r="2.8"/><path d="M3 16c0-3.31 2.69-6 6-6s6 2.69 6 6"/></svg>Crew</div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="addItemModal">
+  <div class="modal"><div class="mdrag"></div><div style="padding:14px 16px;">
+    <div class="mh">Add to Pantry</div>
+    <div class="ig"><label class="lbl">Item name</label><input type="text" class="inp" id="ni-name" placeholder="Chicken breast"></div>
+    <div style="display:flex;gap:7px;"><div class="ig" style="flex:1;"><label class="lbl">Quantity</label><input type="number" class="inp" id="ni-qty" placeholder="500"></div><div class="ig" style="flex:1;"><label class="lbl">Unit</label><select class="sel" id="ni-unit"><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="L">L</option><option value="pcs">pcs</option><option value="cups">cups</option></select></div></div>
+    <div class="ig"><label class="lbl">Category</label><select class="sel" id="ni-cat"><option value="protein">Protein</option><option value="vegetable">Vegetable</option><option value="fruit">Fruit</option><option value="carb">Carbs</option><option value="dairy">Dairy</option><option value="condiment">Condiment</option><option value="other">Other</option></select></div>
+    <div class="ig"><label class="lbl">Location</label><select class="sel" id="ni-loc"><option value="fridge">Fridge</option><option value="freezer">Freezer</option><option value="pantry">Pantry</option></select></div>
+    <div class="ig"><label class="lbl">Expiry date</label><input type="date" class="inp" id="ni-exp"></div>
+    <div class="brow"><button class="mpri" onclick="addPantryItem()">Add Item</button><button class="msec2" style="width:auto;padding:8px 12px;" onclick="closeModal('addItemModal')">Cancel</button></div>
+  </div></div>
+</div>
+
+<div class="overlay" id="addProfModal">
+  <div class="modal"><div class="mdrag"></div><div style="padding:14px 16px;">
+    <div class="mh">New Housemate</div>
+    <div class="ig"><label class="lbl">Name</label><input type="text" class="inp" id="np-name" placeholder="Name"></div>
+    <div class="ig"><label class="lbl">Initials</label><input type="text" class="inp" id="np-init" placeholder="AB" maxlength="2" style="text-transform:uppercase;"></div>
+    <div style="display:flex;gap:7px;"><div class="ig" style="flex:1;"><label class="lbl">Sex</label><select class="sel" id="np-sex"><option value="male">Male</option><option value="female">Female</option></select></div><div class="ig" style="flex:1;"><label class="lbl">Age</label><input type="number" class="inp" id="np-age" placeholder="28"></div></div>
+    <div style="display:flex;gap:7px;"><div class="ig" style="flex:1;"><label class="lbl">Height (cm)</label><input type="number" class="inp" id="np-h" placeholder="175"></div><div class="ig" style="flex:1;"><label class="lbl">Weight (kg)</label><input type="number" class="inp" id="np-w" placeholder="80"></div></div>
+    <div style="display:flex;gap:7px;"><div class="ig" style="flex:1;"><label class="lbl">Goal weight</label><input type="number" class="inp" id="np-gw" placeholder="75"></div><div class="ig" style="flex:1;"><label class="lbl">Activity</label><select class="sel" id="np-act"><option value="sedentary">Sedentary</option><option value="light">Light</option><option value="moderate" selected>Moderate</option><option value="active">Active</option><option value="very_active">Very Active</option></select></div></div>
+    <div class="ig"><label class="lbl">Goal</label><select class="sel" id="np-goal"><option value="cut">Fat Loss</option><option value="maintain">Maintain</option><option value="lean_bulk">Lean Bulk</option><option value="bulk">Bulk</option></select></div>
+    <div class="ig"><label class="lbl">Restrictions (comma-separated)</label><input type="text" class="inp" id="np-rest" placeholder="dairy, shellfish, gluten"></div>
+    <div class="ig"><label class="lbl">Dislikes</label><input type="text" class="inp" id="np-dis" placeholder="eggplant, olives"></div>
+    <div class="brow"><button class="mpri" onclick="addProfile()">Add to Household</button><button class="msec2" style="width:auto;padding:8px 12px;" onclick="closeModal('addProfModal')">Cancel</button></div>
+  </div></div>
+</div>
+
+<div class="overlay" id="recipeModal"><div class="modal" id="recipeContent"></div></div>
+
+<div class="overlay" id="addShopModal">
+  <div class="modal"><div class="mdrag"></div><div style="padding:14px 16px;">
+    <div class="mh">Add to List</div>
+    <div class="ig"><label class="lbl">Item</label><input type="text" class="inp" id="ns-name" placeholder="Oyster sauce"></div>
+    <div class="ig"><label class="lbl">Amount</label><input type="text" class="inp" id="ns-amt" placeholder="1 bottle"></div>
+    <div class="brow"><button class="mpri" onclick="addShopItem()">Add</button><button class="msec2" style="width:auto;padding:8px 12px;" onclick="closeModal('addShopModal')">Cancel</button></div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let sb=null,currentUser=null,DEMO=false;
+
+const S={
+  screen:'home',mealType:'dinner',selectedDiners:[],lo:true,leftoverFor:[],
+  members:[],pantry:[],shopping:[],
+  weekPlan:{
+    Monday:   {b:'Egg & Avocado Toast',l:'Leftover Ramen',    d:'Chicken Ramen Bowl'},
+    Tuesday:  {b:'Protein Smoothie',   l:'Leftover Stir-Fry', d:'Beef & Broccoli Stir-Fry'},
+    Wednesday:{b:'Oatmeal Bowl',       l:'Leftover Salmon',   d:'Salmon Power Bowl'},
+    Thursday: {b:'Egg Scramble',       l:'Leftover Chicken',  d:'Not planned yet'},
+    Friday:   {b:'Greek Yogurt',       l:'TBD',               d:'Not planned yet'},
+    Saturday: {b:'Pancakes',           l:'TBD',               d:'Not planned yet'},
+    Sunday:   {b:'Big Brunch',         l:'—',                 d:'Meal Prep Sunday'}
+  }
+};
+
+const ACT={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,very_active:1.9};
+const GADJ={cut:-500,maintain:0,lean_bulk:250,bulk:500};
+const MSP={breakfast:.25,lunch:.30,dinner:.35,snack:.10};
+
+function bmr(p){const b=10*(p.weight_kg||80)+6.25*(p.height_cm||175)-5*(p.age||30);return p.sex==='male'?b+5:b-161;}
+function tdee(p){return Math.round(bmr(p)*ACT[p.activity||'moderate']);}
+function tgt(p){const t=tdee(p),c=t+GADJ[p.goal||'maintain'],pr=Math.round((p.weight_kg||80)*2),fat=Math.round((c*.25)/9),carbs=Math.round((c-pr*4-fat*9)/4);return{cal:c,prot:pr,carbs,fat};}
+function mB(p,mt){const t=tgt(p),sp=MSP[mt]||.35;return{cal:Math.round(t.cal*sp),prot:Math.round(t.prot*sp),carbs:Math.round(t.carbs*sp),fat:Math.round(t.fat*sp)};}
+function fd(d){const x=new Date();x.setDate(x.getDate()+d);return x.toISOString().split('T')[0];}
+function du(ds){if(!ds)return 99;const t=new Date();t.setHours(0,0,0,0);return Math.ceil((new Date(ds)-t)/864e5);}
+function ec(ds){const d=du(ds);return d<=1?'edanger2':d<=3?'esoon2':'eok2';}
+function et(ds){const d=du(ds);if(d<=0)return'Expired';if(d===1)return'Tomorrow';if(d<=3)return d+'d left';return d+'d';}
+function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+function greet(){const h=new Date().getHours();return h<12?'Good morning,':h<17?'Good afternoon,':'Good evening,';}
+
+/* AUTH */
+function switchTab(tab){
+  ['login','signup'].forEach(function(t){
+    const el = document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('on',t===tab);
+    const form = document.getElementById(t==='login'?'lform':'sform');
+    if(form) form.style.display=t===tab?'block':'none';
+  });
+  const aerr = document.getElementById('aerr');
+  if(aerr) aerr.textContent='';
+}
+
+async function doLogin(){
+  const btn=document.getElementById('l-btn');
+  const email=document.getElementById('l-email').value.trim(),pass=document.getElementById('l-pass').value;
+  if(!email||!pass){document.getElementById('aerr').textContent='Fill in all fields.';return;}
+  btn.disabled=true;btn.textContent='Signing in...';
+  try{
+    if(!sb)throw new Error('Supabase not configured — use Demo Mode.');
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error)throw error;
+    currentUser=data.user;await launch();
+  }catch(e){document.getElementById('aerr').textContent=e.message;btn.disabled=false;btn.textContent='Sign In';}
+}
+
+async function doSignup(){
+  const btn=document.getElementById('s-btn');
+  const name=document.getElementById('s-name').value.trim(),email=document.getElementById('s-email').value.trim(),pass=document.getElementById('l-pass-s').value;
+  if(!name||!email||!pass){document.getElementById('aerr').textContent='Fill in all fields.';return;}
+  if(pass.length<6){document.getElementById('aerr').textContent='Password must be 6+ characters.';return;}
+  btn.disabled=true;btn.textContent='Creating...';
+  try{
+    if(!sb)throw new Error('Supabase not configured — use Demo Mode.');
+    const{data,error}=await sb.auth.signUp({email,password:pass});
+    if(error)throw error;
+    currentUser=data.user;
+    await sb.from('profiles').upsert({id:currentUser.id, household_name:name+"'s Kitchen"});
+    await sb.from('household_members').insert({user_id:currentUser.id,name,initials:ini(name),sex:'male',age:30,height_cm:175,weight_kg:80,goal_weight_kg:75,activity:'moderate',goal:'maintain'});
+    await launch();
+  }catch(e){document.getElementById('aerr').textContent=e.message;btn.disabled=false;btn.textContent='Create Account';}
+}
+
+async function demo(){
+  DEMO=true;currentUser={id:'demo',email:'demo@fridgy.io'};
+  S.members=[{id:'p1',name:'Alex',initials:'AL',sex:'male',age:28,height_cm:180,weight_kg:82,goal_weight_kg:80,activity:'active',goal:'maintain',restrictions:['dairy'],dislikes:['olives']}];
+  S.pantry=[{id:'i1',name:'Chicken Breast',qty:500,unit:'g',cat:'protein',loc:'fridge',exp:fd(2),cal_100g:165,prot_100g:31,carbs_100g:0,fat_100g:3.6}];
+  await launch();
+}
+
+async function doLogout(){if(!DEMO&&sb)await sb.auth.signOut();location.reload();}
+
+/* APP FLOW */
+async function launch(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app-content').style.display='block';
+  if(!DEMO&&sb){
+    const pm=await sb.from('household_members').select('*');if(pm.data)S.members=pm.data;
+    const pi=await sb.from('pantry_items').select('*');if(pi.data)S.pantry=pi.data;
+    const si=await sb.from('shopping_items').select('*');if(si.data)S.shopping=si.data;
+  }
+  S.selectedDiners=S.members.length?[S.members[0].id]:[];
+  go('home');
+}
+
+function go(scr){
+  S.screen=scr;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+scr));
+  document.querySelectorAll('.nv').forEach(n=>n.classList.toggle('active',n.innerText.toLowerCase()===scr));
+  if(scr==='home')renderHome();
+  if(scr==='cook')renderCook();
+  if(scr==='pantry')renderPantry();
+  if(scr==='plan')renderPlan();
+  if(scr==='profiles')renderProfiles();
+  if(scr==='shop')renderShop();
+}
+
+/* RENDERING */
+function renderHome(){
+  document.getElementById('greeting').innerHTML=greet()+' <em>Chef</em>';
+  const rings=document.getElementById('homeRings');
+  rings.innerHTML=S.members.map(function(p){
+    const t=tgt(p);
+    return '<div class="macro-ring-row home"><div class="macro-ring" style="--cal-deg:'+(Math.min(1,1200/t.cal)*360)+'"><div class="macro-ring-inner"><div class="macro-ring-cal">1200</div><div class="macro-ring-lbl">kcal</div></div></div><div class="mring-name">'+p.name+'</div><div class="macro-breakdown"><div class="macro-item"><div class="macro-dot p"></div>'+t.prot+'g</div><div class="macro-item"><div class="macro-dot c"></div>'+t.carbs+'g</div><div class="macro-item"><div class="macro-dot f"></div>'+t.fat+'g</div></div></div>';
+  }).join('');
+  const exp=document.getElementById('homeExp');
+  const soon=S.pantry.filter(i=>du(i.exp)<=3).sort((a,b)=>du(a.exp)-du(b.exp));
+  exp.innerHTML=soon.length?soon.map(i=>'<div class="exit '+ec(i.exp)+'"><span class="exname">'+i.name+'</span><span class="exd">'+et(i.exp)+'</span></div>').join(''):'<div class="emptys">All items fresh</div>';
+}
+
+function renderCook(){
+  const d=document.getElementById('cookDiners');
+  d.innerHTML=S.members.map(p=>'<div class="pchip '+(S.selectedDiners.includes(p.id)?'on':'')+'" onclick="togDiner(''+p.id+'')"><div class="pcav">'+p.initials+'</div><div class="pcn">'+p.name+'</div><div class="pcc">'+mB(p,S.mealType).cal+' cal</div></div>').join('');
+}
+
+function togDiner(id){
+  const idx=S.selectedDiners.indexOf(id);
+  if(idx>-1)S.selectedDiners.splice(idx,1);else S.selectedDiners.push(id);
+  renderCook();
+}
+
+function setMT(t,el){
+  S.mealType=t;
+  document.querySelectorAll('.mtab').forEach(tab=>tab.classList.toggle('on',tab===el));
+  renderCook();
+}
+
+function togLO(){
+  S.lo=!S.lo;
+  document.getElementById('lo-chk').classList.toggle('on',S.lo);
+  document.getElementById('lo-diners').style.display=S.lo?'block':'none';
+  if(S.lo)renderLODiners();
+}
+
+function renderLODiners(){
+  const d=document.getElementById('loDiners');
+  d.innerHTML=S.members.map(p=>'<div class="pchip '+(S.leftoverFor.includes(p.id)?'on':'')+'" onclick="togLOFor(''+p.id+'')"><div class="pcav">'+p.initials+'</div><div class="pcn">'+p.name+'</div></div>').join('');
+}
+
+function togLOFor(id){
+  const idx=S.leftoverFor.indexOf(id);
+  if(idx>-1)S.leftoverFor.splice(idx,1);else S.leftoverFor.push(id);
+  renderLODiners();
+}
+
+async function fetchNutrition(name){
+  try{
+    const r=await fetch('https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(name)+'&search_simple=1&action=process&json=1');
+    const d=await r.json();
+    if(d.products&&d.products[0]){
+      const p=d.products[0];
+      return{
+        cal:Math.round(p.nutriments['energy-kcal_100g']||0),
+        prot:Math.round(p.nutriments.proteins_100g||0),
+        carbs:Math.round(p.nutriments.carbohydrates_100g||0),
+        fat:Math.round(p.nutriments.fat_100g||0)
+      };
+    }
+  }catch(e){console.warn('Nutrition lookup failed',e);}
+  return null;
+}
+
+async function addPantryItem(){
+  const name=document.getElementById('ni-name').value.trim();if(!name)return;
+  toast('Looking up nutrition...');
+  const nut=await fetchNutrition(name);
+  const item={
+    id:'i'+Date.now(),name,qty:parseFloat(document.getElementById('ni-qty').value)||1,
+    unit:document.getElementById('ni-unit').value,cat:document.getElementById('ni-cat').value,
+    loc:document.getElementById('ni-loc').value,exp:document.getElementById('ni-exp').value||fd(7),
+    cal_100g:nut?nut.cal:0,prot_100g:nut?nut.prot:0,carbs_100g:nut?nut.carbs:0,fat_100g:nut?nut.fat:0
+  };
+  if(!DEMO&&sb){const r=await sb.from('pantry_items').insert(Object.assign({},item,{user_id:currentUser.id})).select().single();if(r.data)item.id=r.data.id;}
+  S.pantry.push(item);closeModal('addItemModal');renderPantry();toast('Added '+name);
+}
+
+function renderPantry(){
+  const g=document.getElementById('pantryGrid');
+  g.innerHTML=S.pantry.map(i=>'<div class="card pi"><div style="display:flex;justify-content:space-between;"><div><div class="pi-name">'+i.name+'</div><div class="pi-qty">'+i.qty+i.unit+' • '+i.loc+'</div></div><div class="ebadge '+ec(i.exp)+'">'+et(i.exp)+'</div></div><div class="macro-breakdown" style="margin-top:4px;font-size:.65rem;color:var(--sepia);">'+(i.cal_100g?i.cal_100g+'kcal • '+i.prot_100g+'g P • '+i.carbs_100g+'g C':'No macro data')+'</div></div>').join('');
+}
+
+function renderPlan(){
+  const p=document.getElementById('weeklyPlan');
+  p.innerHTML=Object.keys(S.weekPlan).map(day=>{
+    const d=S.weekPlan[day];
+    return '<div class="dayrow"><div class="dayhdr">'+day+'</div><div class="dmrow"><span class="dmlbl">B:</span> '+d.b+'</div><div class="dmrow"><span class="dmlbl">L:</span> '+d.l+'</div><div class="dmrow"><span class="dmlbl">D:</span> '+d.d+'</div></div>';
+  }).join('');
+}
+
+function renderProfiles(){
+  const c=document.getElementById('profileCards');
+  c.innerHTML=S.members.map(p=>{
+    const t=tgt(p);
+    return '<div class="profcard"><div class="profhdr"><div class="profav">'+p.initials+'</div><div><div class="profname">'+p.name+'</div><div class="profsub">'+p.sex+', '+p.age+'y • '+p.height_cm+'cm</div></div></div><div class="psrow"><div class="ps"><div class="psv">'+p.weight_kg+'</div><div class="psl">Weight</div></div><div class="ps"><div class="psv">'+p.goal_weight_kg+'</div><div class="psl">Goal</div></div><div class="ps"><div class="psv" style="color:var(--teal);">'+t.cal+'</div><div class="psl">Daily Cal</div></div></div><div class="mbsec"><div class="mbrow"><div class="mblbl"><span>Protein</span><span>'+t.prot+'g</span></div><div class="mbar"><div class="mbf mbp" style="width:100%"></div></div></div><div class="mbrow"><div class="mblbl"><span>Carbs</span><span>'+t.carbs+'g</span></div><div class="mbar"><div class="mbf mbc" style="width:100%"></div></div></div><div class="mbrow"><div class="mblbl"><span>Fat</span><span>'+t.fat+'g</span></div><div class="mbar"><div class="mbf mbfat" style="width:100%"></div></div></div></div><div class="rtagw">'+(p.restrictions||[]).map(r=>'<span class="rtag a">'+r+'</span>').join('')+(p.dislikes||[]).map(d=>'<span class="rtag d">'+d+'</span>').join('')+'</div></div>';
+  }).join('');
+}
+
+function renderShop(){
+  const l=document.getElementById('shopList');
+  l.innerHTML=S.shopping.map(i=>'<div class="shitem"><div class="shchk '+(i.checked?'on':'')+'" onclick="togSh(''+i.id+'')"></div><div class="shname '+(i.checked?'crossed':'')+'">'+i.name+' '+(i.amt||'')+'</div></div>').join('');
+  document.getElementById('shopCount').textContent=S.shopping.filter(i=>!i.checked).length;
+  document.getElementById('shopDone').textContent=S.shopping.filter(i=>i.checked).length;
+}
+
+/* MODALS */
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+
+/* AI */
+async function sendChat(){
+  const inp=document.getElementById('chatInp');const msg=inp.value.trim();if(!msg)return;
+  inp.value='';addBub(msg,false);
+  const recipes=await callClaude(msg);
+  if(recipes&&recipes.recipes)addRCards(recipes.recipes);
+}
+
+function addBub(txt,isAI){
+  const f=document.getElementById('chatFeed');
+  const b=document.createElement('div');b.className='bubble '+(isAI?'ai':'user');
+  b.innerHTML=(isAI?'<div class="bfrom">Fridgy Assistant</div>':'')+txt;
+  f.appendChild(b);f.scrollTop=f.scrollHeight;
+}
+
+async function callClaude(msg){
+  const diners=S.selectedDiners.map(function(id){return S.members.find(function(p){return p.id===id;});}).filter(Boolean);
+  const ud=diners.length?diners:S.members;
+  if(!ud.length){addBub('Add household members first via the Crew tab!',true);return null;}
+  const pl=S.pantry.map(function(i){return i.name+'('+i.qty+i.unit+(du(i.exp)<=2?' EXPIRES SOON':'')+')';}).join(', ')||'Empty pantry';
+  const di=ud.map(function(p){const b=mB(p,S.mealType);return p.name+':'+p.goal+','+b.cal+'cal for '+S.mealType+',NO:'+((p.restrictions||[]).join(',')||'none')+',dislikes:'+((p.dislikes||[]).join(',')||'none');}).join(' | ');
+  const macroInfo=ud.map(function(p){const t=tgt(p);const b=mB(p,S.mealType);return p.name+': '+t.cal+'cal daily ('+b.cal+' for '+S.mealType+'), '+t.prot+'g protein, '+t.carbs+'g carbs, '+t.fat+'g fat';}).join(' | ');
+  const sys='You are Fridgy, a warm kitchen assistant helping a household cook meals that hit everyone's nutritional targets.
+Diners: '+di+'
+Meal: '+S.mealType+'
+Daily Macros: '+macroInfo+'
+Pantry: '+pl+'
+Leftovers for: '+(S.lo&&S.leftoverFor.length?ud.filter(function(p){return S.leftoverFor.indexOf(p.id)>-1;}).map(function(p){return p.name;}).join(', '):'none')+'
+Rules: 1) NEVER use restricted ingredients. 2) Prioritize expiring items. 3) Suggest exactly 3 recipes. 4) Ensure recipes fit within each person's macro targets for this meal.
+Respond ONLY with valid JSON, no markdown:
+{"intro":"One warm sentence","recipes":[{"title":"Name","cuisine":"Type","prepTime":15,"cookTime":20,"difficulty":"easy","reheatsWell":true,"availablePercent":90,"missing":[],"why":"One sentence","ingredients":[{"name":"Item","amountPerServing":150,"unit":"g"}],"calsPerServing":450,"proteinPerServing":38,"carbsPerServing":30,"fatPerServing":14,"instructions":["Step 1","Step 2","Step 3"]}]}';
+  const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-3-5-sonnet-20240620',max_tokens:1200,system:sys,messages:[{role:'user',content:msg}]})});
+  const data=await r.json();
+  const txt=data.content&&data.content[0]?data.content[0].text:'{}';
+  try{
+    return JSON.parse(txt);
+  }catch(e){
+    console.warn('JSON parse failed, trying regex', txt);
+    const m=txt.match(/{[sS]*}/);
+    if(m){
+      try{return JSON.parse(m[0]);}catch(e2){console.error('Regex JSON parse failed', e2);}
+    }
+    return null;
+  }
+}
+
+function addRCards(recipes){
+  const res=document.getElementById('recipeResults');res.innerHTML='';
+  recipes.forEach(r=>{
+    const div=document.createElement('div');div.className='card rcard';
+    div.innerHTML='<div style="padding:12px;"><div class="profname">'+r.title+'</div><div class="profsub">'+r.cuisine+' • '+r.prepTime+r.cookTime+'m</div><div class="mbar" style="margin-top:8px;"><div class="mbf" style="width:'+r.availablePercent+'%;background:var(--teal);"></div></div><div class="mblbl" style="margin-top:4px;"><span>Ingredients Available</span><span>'+r.availablePercent+'%</span></div></div><button class="mpri" style="border:none;border-top:1.5px solid var(--rule);border-radius:0;" onclick='showRecipe('+JSON.stringify(r).replace(/'/g,"&apos;") +')'>View Recipe</button>';
+    res.appendChild(div);
+  });
+}
+
+function showRecipe(r){
+  const c=document.getElementById('recipeContent');
+  c.innerHTML='<div class="mdrag"></div><div style="padding:16px;"><div class="mh">'+r.title+'</div><div class="sec">Ingredients</div><ul class="tling">'+r.ingredients.map(i=>'<li class="tl"><span>'+i.name+'</span><span>'+i.amountPerServing+i.unit+'</span></li>').join('')+'</ul><div class="sec">Instructions</div>'+r.instructions.map((s,i)=>'<div class="steprow"><div class="stepn">'+(i+1)+'</div><div class="steptxt">'+s+'</div></div>').join('')+'<div class="brow" style="margin-top:20px;"><button class="mpri" onclick="closeModal('recipeModal')">Back</button></div></div>';
+  openModal('recipeModal');
+}
+
+/* BOOT */
+(async function(){
+  const ls=document.getElementById('loadScreen');
+  if(ls) ls.classList.remove('out','gone');
+  try{
+    const res=await fetch('/api/config');
+    const conf=await res.json();
+    if(conf.url&&conf.key) sb=supabase.createClient(conf.url,conf.key);
+  }catch(e){console.warn('Config failed',e);}
+  
+  if(sb){
+    try{
+      const sd=await sb.auth.getSession();
+      if(sd.data&&sd.data.session&&sd.data.session.user){
+        currentUser=sd.data.session.user;await launch();return;
+      }
+    }catch(e){console.error('Auth check:',e);}
+  }
+  
+  setTimeout(function(){
+    if(ls) ls.classList.add('out');
+    setTimeout(function(){
+      if(ls) ls.classList.add('gone');
+      const authScreen = document.getElementById('auth-screen');
+      if(authScreen){
+        authScreen.style.display='flex';
+        authScreen.classList.add('active');
+      }
+      if(!sb) {
+        const aerr = document.getElementById('aerr');
+        if(aerr) aerr.textContent='Supabase not configured — use Demo Mode.';
+      }
+    },500);
+  },2400);
+})();
+</script>
+</body>
+</html>
